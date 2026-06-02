@@ -1,0 +1,93 @@
+# knowledgizer config — cbio-kb (cancer genomics)
+# This re-expresses the original github.com/jim-bo/cbio-kb workflow as a
+# knowledgizer domain config. Drop this at the repo root of cbio-kb and the
+# generic agents reproduce the original behavior.
+
+domain: cancer-genomics
+description: >
+  Structured wiki of cBioPortal cancer-genomics papers, linking genes, cancer
+  types, datasets, drugs, and methods to their citing literature, with
+  passage-level grounding from a FAISS index over the source PDFs.
+
+wiki_dir: wiki
+raw_dir: data/raw
+schema_dir: schema
+templates_dir: schema/templates
+hard_rules_file: schema/CLAUDE.md
+ontology_file: schema/ontology.md
+
+source:
+  id_field: pmid
+  folder: papers
+  raw_glob: "papers/*.md"
+  sections:
+    - TL;DR
+    - Cohort & data
+    - Key findings
+    - Genes & alterations
+    - Clinical implications
+    - Limitations & open questions
+
+entity_kinds:
+  - id: gene
+    folder: genes
+    id_format: "HUGO gene symbol (uppercase)"
+    template: gene.md
+  - id: cancer_type
+    folder: cancer_types
+    id_format: "OncoTree code"
+    template: cancer_type.md
+  - id: dataset
+    folder: datasets
+    id_format: "cBioPortal studyId or kebab slug"
+    template: dataset.md
+  - id: drug
+    folder: drugs
+    id_format: "lowercase generic drug name"
+    template: drug.md
+  - id: method
+    folder: methods
+    id_format: "kebab slug"
+    template: method.md
+
+tooling:
+  wiki_cli: "uv run cbio-kb wiki"
+  index_cli: "uv run cbio-kb index"
+  lint_cmd: "uv run cbio-kb lint --wiki-dir wiki"
+  build_index_cmd: "uv run cbio-kb wiki build-index"
+  build_graph_cmd: "uv run cbio-kb wiki build-graph"
+  normalize_cmd: "uv run cbio-kb wiki normalize-brackets"
+  append_citation_cmd: "uv run cbio-kb wiki append-citation"
+  crosslink_cmd: "uv run cbio-kb crosslink"
+
+links:
+  style: markdown
+  citation_template: "[PMID:{id}](../papers/{id}.md)"
+  provenance_footer: "*This page was processed by **{agent}** on **{date}**.*"
+
+claims:
+  enabled: false   # opt-in; paused pending schema decision in notes/FACT_VERIFICATION.md
+  sidecar_suffix: ".claims.json"
+  kinds:
+    - id: sample_count
+      fields: [study, value, denominator, quote, section]
+      verify: "compare value to the study's sequencedSampleCount (|Δ|≤5 or ≤10%)"
+    - id: mutation_rate
+      fields: [study, gene, modifier, value, denominator, quote, section]
+      verify: >
+        compare value to unique_samples_with_mutation / sequencedSampleCount,
+        filtered by modifier (±5 percentage points). Skip rates whose
+        denominator is a tier-mixed total, a named subset, or a pooled
+        superset — the API returns rates over the single deposited cohort only.
+
+orchestration:
+  model_pinning:
+    source-compiler: opus
+    entity-page-writer: sonnet
+    crosslinker: haiku
+    claims-extractor: sonnet
+    theme-synthesizer: opus
+    wiki-querier: opus
+    wiki-linter: haiku
+  batch_wave_size: 5
+  gene_shard_size: 20
