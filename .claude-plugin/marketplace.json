@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Knowledgizer marketplace — tools for building cited, cross-linked knowledge wikis from document corpora.",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "knowledgizer",
       "source": "./",
       "description": "Build and maintain a cited, cross-linked knowledge wiki from a corpus of source documents. Config-driven and domain-agnostic.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "research",
       "keywords": ["knowledge-graph", "wiki", "research", "citations"]
     }
