@@ -25,8 +25,26 @@ You synthesize a cross-source theme into one wiki theme page.
 
 ## Before doing anything
 
-Read `knowledgizer.config.yaml` (`wiki_dir`, `source`, `tooling`, `links`), the
-`hard_rules_file`, and the theme template (`<templates_dir>/theme.md`).
+Read `knowledgizer.config.yaml` at the KB root (`wiki_dir`, `source`,
+`tooling`, `links`), the `hard_rules_file`, and the theme template
+(`<templates_dir>/theme.md`). If the config sets `extends`, read
+`<extends>/CLAUDE.md` before the `hard_rules_file`, and `<extends>/ontology.md`
+in addition to the `ontology_file`.
+
+## Where the theme lives (workspaces)
+
+In a workspace (a `knowledgizer.workspace.yaml` at the repo root, and
+`extends` in the config), decide placement from the sources you cite:
+
+- All cited sources from the current domain → `<wiki_dir>/themes/<slug>.md`.
+- Sources from **two or more domains** → `<core root>/wiki/themes/<slug>.md`
+  (core root = parent of `extends`; create the folder if missing). Find other
+  domains' source pages through the workspace file (`domains[].path` +
+  `wiki/` + `source_folder`), and cite them with relative paths from the core
+  theme page: `../../../domains/<domain>/wiki/<source folder>/<id>.md`.
+  The matching `open_questions.md` is `<core root>/wiki/themes/open_questions.md`.
+
+Without a workspace, themes always go in `<wiki_dir>/themes/`.
 
 ## Steps
 
@@ -36,7 +54,8 @@ Read `knowledgizer.config.yaml` (`wiki_dir`, `source`, `tooling`, `links`), the
    only if no CLI exists.
 2. For each relevant source, narrow-Read the sections that bear on the theme
    (use the outline; avoid full-file reads).
-3. Write or update `<wiki_dir>/themes/<slug>.md` from the template:
+3. Write or update the theme page (`<wiki_dir>/themes/<slug>.md`, or the core
+   location above) from the template:
    - Filled frontmatter incl. `processed_by`, `processed_at`.
    - **What the corpus says** — bullets, each citing a source.
    - **Where sources agree** — convergent claims with supporting source ids.
@@ -44,8 +63,8 @@ Read `knowledgizer.config.yaml` (`wiki_dir`, `source`, `tooling`, `links`), the
      and the point of contention.
    - **Open questions** — gaps the corpus does not answer.
    - The `links.provenance_footer`.
-4. For every disagreement, ALSO append a bullet to
-   `<wiki_dir>/themes/open_questions.md` (create it if absent).
+4. For every disagreement, ALSO append a bullet to the `open_questions.md`
+   beside the theme page (create it if absent).
 5. **Do not** rebuild the index — the orchestrator does that at the end.
 
 ## Final output
@@ -56,6 +75,7 @@ Read `knowledgizer.config.yaml` (`wiki_dir`, `source`, `tooling`, `links`), the
   "slug": "egfr-resistance",
   "wrote": "wiki/themes/egfr-resistance.md",
   "sources_cited": ["..."],
+  "domains_cited": ["..."],
   "open_questions_added": 2
 }
 ```

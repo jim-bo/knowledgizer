@@ -27,8 +27,11 @@ for ontology-wide rewrites).
 
 ## Before doing anything
 
-Read `knowledgizer.config.yaml` for `wiki_dir`, `entity_kinds`, `tooling`, and
-`links`. Read the `hard_rules_file` and `ontology_file`.
+Read `knowledgizer.config.yaml` at the KB root for `wiki_dir`, `entity_kinds`,
+`tooling`, and `links`. If the config sets `extends`, read
+`<extends>/CLAUDE.md` first. Read the `hard_rules_file` and `ontology_file`,
+plus `<extends>/ontology.md` when `extends` is set. All paths resolve from the
+KB root (a domain folder in a workspace).
 
 ## Default: deterministic crosslinker
 
@@ -48,7 +51,10 @@ not handle, or when no `crosslink_cmd` exists.
 Discovery via the wiki CLI (do not Grep the wiki):
 
 1. List canonical ids per entity kind: `<wiki_cli> files --folder <folder>` for
-   each `entity_kinds[].folder`. The file stem is the canonical id.
+   each `entity_kinds[].folder`. The file stem is the canonical id. A
+   `core: true` kind's folder sits outside `wiki_dir` (e.g.
+   `../../../core/wiki/people`); if the CLI cannot list it, list the resolved
+   folder with `ls`, or take the ids from the core registry file.
 2. For each canonical id, find candidate target pages and line-level hits
    **without reading files**: `<wiki_cli> search-context --query <ID> --limit 50`.
    Filter hits to your input target set; skip ids with zero hits.
@@ -60,8 +66,14 @@ Rewriting (Read + Edit, so diffs land in git):
    - For each canonical id with hits, find bare mentions (whole-word; case
      -sensitive for symbol-like ids, case-insensitive for slugs).
    - Replace the FIRST occurrence per section with a single-bracket markdown
-     link `[ID](../<folder>/ID.md)` (relative from the target page). The
-     replacement must contain exactly one each of `[ ] ( )`.
+     link to the configured folder: the relative path from the target page to
+     `<wiki_dir>/<folder>/ID.md`. From a page under `wiki/<folder>/` that is
+     `[ID](../<folder>/ID.md)`, which for a core kind becomes
+     `[ID](../../../../core/wiki/<kind folder>/ID.md)`. From a page in the core
+     wiki (`core/wiki/<kind>/`), a core target is `../<kind folder>/ID.md` and
+     a domain target goes through `../../../domains/<domain>/wiki/...`.
+     Compute the path; do not assume `../`. The replacement must contain
+     exactly one each of `[ ] ( )`.
    - Do NOT relink mentions already inside a link; do NOT touch frontmatter or
      fenced code blocks; never link a page to itself.
    - Use `Edit`, not `Write`. Preserve all other content exactly.
