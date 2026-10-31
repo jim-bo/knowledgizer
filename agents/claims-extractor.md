@@ -24,8 +24,10 @@ verifier can check it.
 
 ## Before doing anything
 
-Read `knowledgizer.config.yaml`. **If `claims.enabled` is not true, stop and
-return an empty result** — this agent is opt-in. Otherwise read:
+Read `knowledgizer.config.yaml` at the KB root. **If `claims.enabled` is not
+true, stop and return an empty result** — this agent is opt-in. Otherwise read
+(if the config sets `extends`, read `<extends>/CLAUDE.md` before the domain
+hard rules, and `<extends>/ontology.md` alongside the domain ontology):
 - `claims.kinds` — the only claim shapes you may emit (each with its `fields`
   and `verify` description). Emit nothing for kinds not listed here; never
   invent a kind.

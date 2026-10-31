@@ -4,9 +4,11 @@ description: >
   Stand up a new knowledgizer knowledge base by interactively building its
   domain config and scaffolding. Use when the user says "set up knowledgizer",
   "start a new knowledge base", "configure knowledgizer", "create the domain
-  config", or is in a repo that has no knowledgizer.config.yaml yet.
+  config", "add a domain", or is in a repo that has no knowledgizer.config.yaml
+  yet. In a workspace (knowledgizer.workspace.yaml) it scaffolds a new domain
+  that extends the shared core layer.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 Guide the user through standing up a knowledgizer knowledge base in the current
@@ -18,10 +20,19 @@ before generating the file. The methodology is in
 
 ## First: detect state
 
-Check whether `knowledgizer.config.yaml` exists at the repo root.
-- If it exists, switch to **edit mode**: summarize the current config and ask
-  what to change, rather than overwriting.
-- If not, run the wizard below.
+Check, at the repo root, for `knowledgizer.workspace.yaml` and
+`knowledgizer.config.yaml`.
+- **Workspace file exists:** this repo shares a core layer across domains. Do
+  not write a root config. Summarize the listed domains and offer to (a) **add
+  a new domain** (see "Workspace: add a domain" below) or (b) edit one
+  domain's config (edit mode, with that domain folder as the KB root).
+- **Root config exists (no workspace):** switch to **edit mode**: summarize the
+  current config and ask what to change, rather than overwriting.
+- **Neither:** run the wizard below for a single knowledge base. Mention in one
+  line that if they expect several corpora to share people, genes, methods and
+  the like, a workspace with a shared core layer is an option
+  (`reference/config-schema.md`, "Workspaces and the core layer"); proceed
+  with the single-KB flow unless they ask for it.
 
 ## Wizard — ask in plain language, one topic at a time
 
@@ -74,6 +85,57 @@ a concrete config and confirm before writing.
    H2s on `source.sections`.
 5. Write a one-line `<wiki_dir>/index.md` placeholder (the project's
    deterministic build step, if any, regenerates it later).
+
+## Workspace: add a domain
+
+When `knowledgizer.workspace.yaml` exists, the new domain is a normal
+knowledgizer KB in `domains/<name>/` whose config extends the core schema.
+Read the workspace file, `<core.schema>/CLAUDE.md`, `<core.schema>/ontology.md`
+and one existing domain config first, and match their conventions.
+
+1. Ask (AskUserQuestion), in plain language: the domain name (kebab, becomes
+   the folder and the name in core pages' `domains:` lists), what it covers,
+   what one input document is (`source.id_field`, `source.folder`), the source
+   sections, which **core kinds** it will cite (default: all of
+   `core.kinds`), and any **local kinds** only this domain needs. If a
+   proposed local kind is already a core kind, or a local kind in another
+   domain, say so: the first should use core; the second is a promotion
+   candidate (see `concepts.md`), not a new local kind.
+2. Write `domains/<name>/knowledgizer.config.yaml`: the usual fields with
+   paths relative to the domain folder, plus
+   ```yaml
+   extends: ../../core/schema
+   entity_kinds:
+     - id: person
+       core: true
+       folder: ../../../core/wiki/people                       # from wiki_dir
+       id_format: "kebab slug firstname-lastname exactly as printed"
+       template: ../../../../core/schema/templates/person.md   # from templates_dir
+     # ... one entry per chosen core kind, folder = its core wiki folder
+     - id: <local kind>
+       folder: <local folder>
+       id_format: "..."
+       template: <local kind>.md
+   ```
+   Take each core kind's folder from `core.wiki` (e.g. `biomarker` →
+   `biomarkers`, `person` → `people`) and its template from
+   `<core.schema>/templates/<kind>.md`; check every resolved path exists.
+3. Scaffold `domains/<name>/`: `wiki/<source.folder>/`, `wiki/themes/`,
+   `wiki/explorations/`, one `wiki/<folder>/` per **local** kind only (never
+   for a core kind), `data/raw/<source.folder>/`, `schema/templates/`.
+4. Starter schema files in `domains/<name>/schema/`: a `CLAUDE.md` that says
+   to read the core `CLAUDE.md` first and adds only domain rules (citation
+   form from a domain page, link form to core pages
+   `../../../../core/wiki/<kind folder>/<id>.md`), an `ontology.md` for local
+   kinds, an `_observed.md` holding pen, and templates for the source, theme
+   and each local kind. Core kinds use the core templates; do not copy them.
+5. Add the domain to `knowledgizer.workspace.yaml` under `domains:` (`name`,
+   `path`, `source_folder`, `local_kinds`). Leave the core layer and the other
+   domains untouched.
+6. Write a one-line `domains/<name>/wiki/index.md` placeholder.
+
+Then orient the user as below, adding that runs in this domain take its folder
+as the KB root (`knowledgizer domains/<name>`, or pick it when asked).
 
 ## Finally: orient the user
 

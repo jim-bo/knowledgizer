@@ -1,6 +1,6 @@
 {
   "name": "knowledgizer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Build and maintain a cited, cross-linked knowledge wiki from a corpus of source documents. Domain-agnostic: a per-project config defines the ontology, page templates, and tooling. Ships specialized agents (compile, entity-page, crosslink, synthesize, query, lint, claims) plus a setup wizard and orchestrator.",
   "author": {
     "name": "jim-bo"

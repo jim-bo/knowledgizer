@@ -1,0 +1,20 @@
+# knowledgizer workspace — one shared core layer plus one knowledgizer domain per folder.
+# Run the plugin with a domain folder as the KB root (e.g. `knowledgizer domains/trial-matching`),
+# or at this root and pick a domain when asked.
+
+core:
+  path: core
+  schema: core/schema          # shared hard rules (CLAUDE.md), ontology.md, templates/<kind>.md
+  registry: core/registry      # <kind folder>.yaml: id -> {name, aliases, domains, sources}
+  wiki: core/wiki              # <kind folder>/<id>.md, plus themes/ and explorations/ for cross-domain work
+  kinds: [person, organization, disease, gene, biomarker, therapy, dataset, method, metric, task]
+
+domains:
+  - name: trial-matching       # the name core pages list under `domains:`
+    path: domains/trial-matching
+    source_folder: papers      # = source.folder in that domain's config
+    local_kinds: []
+  - name: immunoprofile
+    path: domains/immunoprofile
+    source_folder: papers
+    local_kinds: [cell_type, platform]

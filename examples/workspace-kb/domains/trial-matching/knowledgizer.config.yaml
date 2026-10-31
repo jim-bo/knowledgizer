@@ -1,0 +1,85 @@
+# knowledgizer config — one domain in a workspace.
+# The KB root is this folder: every path below resolves from domains/trial-matching/.
+# Core kinds point at ../../core through relative folder/template paths, so the
+# usual <wiki_dir>/<folder>/<id>.md rule lands them in core/wiki/<kind folder>/.
+
+domain: clinical-trial-matching
+description: >
+  Structured, cited wiki of papers on matching patients to clinical trials:
+  matchers, eligibility-criteria parsing, benchmarks, metrics and disease areas.
+
+extends: ../../core/schema          # read core CLAUDE.md first, core ontology.md alongside ours
+
+wiki_dir: wiki
+raw_dir: data/raw
+schema_dir: schema
+templates_dir: schema/templates
+hard_rules_file: schema/CLAUDE.md
+ontology_file: schema/ontology.md
+
+source:
+  id_field: slug                   # <first-author-surname>-<year>-<2-4 word topic>
+  folder: papers
+  raw_glob: "papers/*.md"
+  sections:
+    - TL;DR
+    - Problem & task framing
+    - Data & benchmarks
+    - Method
+    - Results
+    - Limitations & open questions
+
+entity_kinds:
+  # Core kinds: shared pages under core/wiki, resolved through core/registry before minting.
+  - id: method
+    core: true
+    folder: ../../../core/wiki/methods                        # relative to wiki_dir
+    id_format: "kebab slug of the method or model as the paper names it (e.g. trialgpt, bm25)"
+    template: ../../../../core/schema/templates/method.md    # relative to templates_dir
+  - id: dataset
+    core: true
+    folder: ../../../core/wiki/datasets
+    id_format: "kebab slug incl. year/track if versioned (e.g. trec-ct-2021)"
+    template: ../../../../core/schema/templates/dataset.md
+  - id: metric
+    core: true
+    folder: ../../../core/wiki/metrics
+    id_format: "kebab slug of the metric (e.g. ndcg-at-10)"
+    template: ../../../../core/schema/templates/metric.md
+  - id: task
+    core: true
+    folder: ../../../core/wiki/tasks
+    id_format: "kebab slug of the task framing (e.g. patient-to-trial-retrieval)"
+    template: ../../../../core/schema/templates/task.md
+  - id: disease
+    core: true
+    folder: ../../../core/wiki/diseases
+    id_format: "kebab slug, lowercase (e.g. non-small-cell-lung-cancer)"
+    template: ../../../../core/schema/templates/disease.md
+  - id: person
+    core: true
+    folder: ../../../core/wiki/people
+    id_format: "kebab slug firstname-lastname exactly as printed; never guess a full name from initials"
+    template: ../../../../core/schema/templates/person.md
+  - id: organization
+    core: true
+    folder: ../../../core/wiki/organizations
+    id_format: "kebab slug of the institution as printed in affiliations"
+    template: ../../../../core/schema/templates/organization.md
+  # A local kind: lives only in this domain's wiki. If a second domain starts
+  # citing it, promote it to core (move pages, add a registry file, mark core: true).
+  - id: criterion_type
+    folder: criterion_types
+    id_format: "kebab slug of the eligibility-criterion category (e.g. prior-therapy, lab-value)"
+    template: criterion_type.md
+
+links:
+  style: markdown
+  citation_template: "[{id}](../papers/{id}.md)"   # from domain pages; core pages use ../../../domains/trial-matching/wiki/papers/{id}.md
+  provenance_footer: "*This page was processed by **{agent}** on **{date}**.*"
+
+# tooling: left unset here. Repo-level checks (tools/check_links.py,
+# tools/check_registry.py), if the workspace ships them, run from the repo root.
+
+orchestration:
+  batch_wave_size: 5

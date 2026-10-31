@@ -26,6 +26,43 @@ Two kinds of node:
   accreting claims from every source that mentions it. The entity page is the
   cross-document synthesis; the citation back to a source is the provenance.
 
+## The core layer (workspaces)
+
+One KB per corpus works until two corpora share entities: the same person,
+gene or method then gets a page in each, and the copies drift. A **workspace**
+fixes this with a shared core layer and one domain per corpus (see
+`config-schema.md`, "Workspaces and the core layer").
+
+```
+  domains/A/wiki/papers/{id}.md ──┐                ┌── domains/B/wiki/papers/{id}.md
+  domains/A/wiki/<local kinds>/   │                │   domains/B/wiki/<local kinds>/
+                                  ▼                ▼
+                    core/wiki/<kind>/{id}.md   (one page per shared entity)
+                    core/registry/<kind>.yaml  (id -> name, aliases, domains, sources)
+```
+
+- **Shared entities exist once.** Kinds marked `core: true` in a domain config
+  live in `core/wiki/<kind folder>/`. Every domain links to the same page;
+  no domain creates a core-kind page under its own wiki.
+- **Resolve before mint.** The registry maps each canonical id to its name and
+  aliases. Before proposing a new core id, agents look the term up there and
+  reuse the canonical id on a hit. A new id gets its page *and* its registry
+  entry in the same change, so the registry and the core wiki stay in step.
+- **`domains:` provenance.** A core page lists every domain whose sources cite
+  it (`domains:`) besides the citing source ids (`cited_by:`), so a reader of a
+  shared page sees where it matters.
+- **Promotion.** A kind starts local to one domain. When a second domain starts
+  citing it, promote it: move its pages to `core/wiki/<kind folder>/`, add a
+  registry file, mark the kind `core: true` (relative folder and template) in
+  both configs, and re-point links. Promotion is a deliberate,
+  human-reviewed change, not something an agent does mid-ingest.
+- **Cross-domain syntheses live in core.** A theme or exploration citing
+  sources from two or more domains goes under `core/wiki/themes/` or
+  `core/wiki/explorations/`; otherwise it stays in the domain.
+
+Each run targets one domain: the domain folder is the KB root, and the core
+schema's hard rules and ontology are read alongside the domain's (`extends`).
+
 ## The roles (agents)
 
 | Agent | Job | Reads | Writes |
@@ -44,7 +81,8 @@ Two kinds of node:
    supports it. Blank beats guess.
 2. **Never invent canonical ids.** Genes, codes, study ids — only use ones the
    ontology or source declares. Unverified terms go to an `_observed` holding
-   pen, never into canonical pages.
+   pen, never into canonical pages. In a workspace, resolve core-kind terms
+   through the registry first.
 3. **Idempotent.** Re-running the compiler overwrites a source page; the
    entity-writer merges (de-dup by source id). Reruns are safe.
 4. **Deterministic post-steps own shared state.** No agent edits the index or

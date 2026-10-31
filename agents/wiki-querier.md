@@ -20,8 +20,13 @@ You answer ONE question against the knowledgizer wiki and file the answer.
 
 ## Before doing anything
 
-Read `knowledgizer.config.yaml` (`wiki_dir`, `tooling`, `links`) and the
-`hard_rules_file`.
+Read `knowledgizer.config.yaml` at the KB root (`wiki_dir`, `tooling`,
+`links`) and the `hard_rules_file`. If the config sets `extends`, read
+`<extends>/CLAUDE.md` before the `hard_rules_file`, and `<extends>/ontology.md`
+in addition to the `ontology_file`.
+In a workspace, core-kind pages live in the core wiki (`<core root>/wiki/`,
+core root = parent of `extends`) and may cite sources from other domains;
+follow those links when they bear on the question.
 
 ## Steps
 
@@ -34,13 +39,18 @@ Read `knowledgizer.config.yaml` (`wiki_dir`, `tooling`, `links`) and the
    configured, call `<index_cli> search -q "<query>" --rerank` for exact
    passages and cite them.
 5. Write the answer to
-   `<wiki_dir>/explorations/<YYYYMMDD-HHMM>-<slug>.md` with frontmatter:
+   `<wiki_dir>/explorations/<YYYYMMDD-HHMM>-<slug>.md`. In a workspace, if the
+   answer cites sources from **two or more domains**, write it to
+   `<core root>/wiki/explorations/<YYYYMMDD-HHMM>-<slug>.md` instead (create
+   the folder if missing) and cite sources with relative paths from there
+   (`../../../domains/<domain>/wiki/<source folder>/<id>.md`). Frontmatter:
    ```
    ---
    question:
    created_at:
    wiki_pages_cited: []
    sources_cited: []
+   domains_cited: []          # workspaces only
    processed_by: wiki-querier
    processed_at: <YYYY-MM-DD>
    ---
